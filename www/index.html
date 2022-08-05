@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Smart Farm</title> 
+<meta charset="UTF-8">
+  
+<style>
+    .bodyDiv {
+      padding: 20px;
+      margin: 10px;
+      border: 5px solid rgb(50, 46, 53);
+      border-radius: 10px;
+    }
+    h1   {
+      color: black;
+      font-size: 50px;
+    }
+    div.sensorDiv {
+      font-size: 30px;
+      display :flex ;
+      flex-wrap: wrap;  
+    }
+    div.valueDiv {
+      border: 1px outset rgb(131, 129, 129);
+      text-align: center;
+      /* padding: 10px; */
+      margin: 9px;
+      border-radius: 10px;
+      font-size: 20px;
+      width: 100px;
+    }
+    div.buttonGroupDiv {
+       display :flex; 
+       flex-wrap: wrap;
+    }
+    .buttonRelay {
+      /* padding: 10px; */
+      padding: 40px 0px 40px 0px; 
+      margin: 10px;
+      border-radius: 10px;
+      font-size: 20px;
+      width: 100px;
+      background-color:rgb(48, 230, 60);
+      color: black;
+    }
+    .state {
+      font-size: 20px;
+    }
+</style>
+</head>
+
+<body>
+
+	<script language="javascript">
+
+		var output;
+
+		function init()
+		{
+			output = document.getElementById("output");
+			testWebSocket();
+		}
+
+		function testWebSocket()
+		{
+			var scheme, defaultPort
+			if (window.location.protocol == 'https:')
+			{
+				scheme = 'wss:';
+				defaultPort = 443;
+			}
+			else
+			{
+				scheme = 'ws:';
+				defaultPort = 80;
+			}
+			var wsUri = scheme + '//' + window.location.hostname;
+			if (window.location.port !== defaultPort)
+				wsUri += ':' + window.location.port;
+			writeToScreen("Connecting to " + wsUri + "...")
+			websocket           = new WebSocket(wsUri);
+			websocket.onopen    = function(evt) { onOpen    (evt) };
+			websocket.onclose   = function(evt) { onClose   (evt) };
+			websocket.onmessage = function(evt) { onMessage (evt) };
+			websocket.onerror   = function(evt) { onError   (evt) };
+		}
+
+		function onMessage(evt)
+		{
+			writeToScreen('MSG FROM SERVER : <span style="color: blue;">' + evt.data + '</span>');
+		}
+
+		function onError(evt)
+		{
+			writeToScreen('ERROR : <span style="color: red;">' + evt.data + '</span>');
+		}
+
+		function SendMsg(msg)
+		{
+			writeToScreen('MSG TO SERVER : <span style="color: green;">' + msg + '</span>');
+			websocket.send(msg);
+		}
+
+		function writeToScreen(s)
+		{
+			var pre = document.createElement("p");
+			pre.style.wordWrap = "break-word";
+			pre.innerHTML = s;
+			output.appendChild(pre);
+		}
+
+		window.addEventListener("load", init, false);
+		
+		function onOpen(evt)
+		{
+			state.innerHTML = "<b>STATE:</b> Connected"
+			writeToScreen("<strong>-- CONNECTED --</strong>");
+			SendMsg("Hello world :)");
+			
+		}
+
+		function onClose(evt)
+		{
+			state.innerHTML = "<b>STATE:</b> Disonnected"
+			writeToScreen("<strong>-- DISCONNECTED --</strong>");
+		}
+		
+		function onMessage(evt) 
+		{
+      			if (evt.data == "Reply_LED_ON1" ) 
+      			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data;
+        			document.getElementById("relay1").style.backgroundColor = "rgb(48, 230, 60)";
+     			} 
+     			else if (evt.data == "Reply_LED_OFF1") 
+     			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data; 
+        			document.getElementById("relay1").style.backgroundColor = "rgb(250, 17, 17)";
+      			}
+      			
+      			else if (evt.data == "Reply_LED_ON2" ) 
+      			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data;
+        			document.getElementById("relay2").style.backgroundColor = "rgb(48, 230, 60)";
+     			} 
+      			else if (evt.data == "Reply_LED_OFF2") 
+     			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data; 
+        			document.getElementById("relay2").style.backgroundColor = "rgb(250, 17, 17)";
+      			}
+      			
+      			else if (evt.data == "Reply_LED_ON3" ) 
+      			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data;
+        			document.getElementById("relay3").style.backgroundColor = "rgb(48, 230, 60)";
+     			} 
+      			else if (evt.data == "Reply_LED_OFF3") 
+     			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data; 
+        			document.getElementById("relay3").style.backgroundColor = "rgb(250, 17, 17)";
+      			}
+      			
+      			else if (evt.data == "Reply_LED_ON4" ) 
+      			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data;
+        			document.getElementById("relay4").style.backgroundColor = "rgb(48, 230, 60)";
+     			} 
+      			else if (evt.data == "Reply_LED_OFF4") 
+     			{
+        			state.innerHTML = "<b>STATE: </b>" + evt.data; 
+        			document.getElementById("relay4").style.backgroundColor = "rgb(250, 17, 17)";
+      			}
+      			
+      			
+      			else if(evt.data.substring(0,4) == 'temp' )
+      			{
+        			document.getElementById("temperature").innerHTML = evt.data.substring(5, evt.data.length);        
+      			}
+      			else if (evt.data.substring(0,4) == 'humi' )
+      			{
+        			document.getElementById("humidity").innerHTML = evt.data.substring(5, evt.data.length);
+      			}
+      			else if (evt.data.substring(0,4) == 'soil' )
+      			{
+        			document.getElementById("soil").innerHTML = evt.data.substring(5, evt.data.length);
+      			} 
+    		}
+		
+    		function relay1() 
+    		{
+      			let color = document.getElementById("relay1");
+      			let myDivObjBgColor = window.getComputedStyle(color).backgroundColor
+      			if (myDivObjBgColor == "rgb(250, 17, 17)") 
+      			{ // red 
+        			console.log("On");
+        			websocket.send("LED_ON1");
+      			}
+      			else if (myDivObjBgColor == "rgb(48, 230, 60)") 
+      			{ // green
+        			console.log("Off");
+        			websocket.send("LED_OFF1");
+      			}
+    		}
+
+    		function relay2() 
+    		{
+    		      	let color = document.getElementById("relay2");
+      			let myDivObjBgColor = window.getComputedStyle(color).backgroundColor
+      			if (myDivObjBgColor == "rgb(250, 17, 17)") 
+      			{ // red 
+        			console.log("On");
+        			websocket.send("LED_ON2");
+      			}
+      			else if (myDivObjBgColor == "rgb(48, 230, 60)") 
+      			{ // green
+        			console.log("Off");
+        			websocket.send("LED_OFF2");
+      			}
+    		}
+    
+    		function relay3() 
+    		{
+    		      	let color = document.getElementById("relay3");
+      			let myDivObjBgColor = window.getComputedStyle(color).backgroundColor
+      			if (myDivObjBgColor == "rgb(250, 17, 17)") 
+      			{ // red 
+        			console.log("On");
+        			websocket.send("LED_ON3");
+      			}
+      			else if (myDivObjBgColor == "rgb(48, 230, 60)") 
+      			{ // green
+        			console.log("Off");
+        			websocket.send("LED_OFF3");
+      			}
+    		}
+
+    		function relay4() 
+    		{
+         		let color = document.getElementById("relay4");
+      			let myDivObjBgColor = window.getComputedStyle(color).backgroundColor
+      			if (myDivObjBgColor == "rgb(250, 17, 17)") 
+      			{ // red 
+        			console.log("On");
+        			websocket.send("LED_ON4");
+      			}
+      			else if (myDivObjBgColor == "rgb(48, 230, 60)") 
+      			{ // green
+        			console.log("Off");
+        			websocket.send("LED_OFF4");
+      			}
+   		}
+
+	</script>
+
+	<div class = "bodyDiv">
+	
+	<div id="output"></div>
+	
+		<h1>Smart Farm</h1>
+		
+		<ul>
+            		<li><a href="test">Test a redirection</a></li>
+       		</ul>
+        	
+		<div class = "sensorDiv">
+
+  			<div class="valueDiv">
+				<p><span id="temperature">%TEMP%</span> °C</p>
+				<p>อุณหภูมิ</p>
+			</div>
+	
+			<div class="valueDiv">
+				<p><span id="humidity">%HUMI%</span> %</p>
+				<p>ความชื้น</p>
+			</div>
+	
+			<div class="valueDiv">
+				<p><span id="soil">%SOIL%</span> %</p>
+				<p>ความชื้นดิน</p>  
+        		</div>
+        
+		</div>
+      
+		<div class="buttonGroupDiv">
+			<a onclick="relay1()"><button class="buttonRelay" id="relay1">รีเลย์ 1</button></a>
+        		<a onclick="relay2()"><button class="buttonRelay" id="relay2">รีเลย์ 2</button></a>
+        		<a onclick="relay3()"><button class="buttonRelay" id="relay3">รีเลย์ 3</button></a>
+        		<a onclick="relay4()"><button class="buttonRelay" id="relay4">รีเลย์ 4</button></a>
+      		</div>
+      		
+      		<p id="state" class="state"><b>STATE:</b> Waiting for Connection...</p>
+    
+  	</div>
+  	
+</body>
+</html>
